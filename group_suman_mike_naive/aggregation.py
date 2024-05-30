@@ -45,6 +45,7 @@ def query(df):
             else:
                 prev_count = result[str(f_t)][0]
                 result[str(math.nan)] = [prev_count + 1, math.nan, 1]
+    print(f"{result = }")
     # nnpc - non nan passenger count
     data = [(ft, vc, round(pc/nnpc, 1)) for ft, (vc, pc, nnpc) in zip(result.keys(), result.values())]
     result_df = pd.DataFrame(columns=['fuel_type', 'vehicle_count', 'avg_passengers'], data=data)
