@@ -11,7 +11,8 @@
    ```
 5. Run all solutions:
    ```bash
-   python3 gather_results.py `ls -d group_*`
+   python3 gather_results.py aggregation `ls -d group_*`
+   python3 gather_results.py join `ls -d group_*`
    ```
 6. Checkin:
    ```bash
