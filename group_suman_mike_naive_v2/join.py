@@ -31,18 +31,19 @@ def query(lineitem, part):
         partkey_lookup[partkey] = np.float64()
     print("hash table length: ", len(partkey_lookup))
     for i in range(len(lineitem)):
-        lineitem_i = lineitem.iloc[i]
-        if not (lineitem_i["l_shipdate"] >= Timestamp(1995, 9, 1) and
-                lineitem_i["l_shipdate"] < Timestamp(1995, 10, 1)):
+        if not (lineitem["l_shipdate"][i] >= Timestamp(1995, 9, 1) and
+                lineitem["l_shipdate"][i] < Timestamp(1995, 10, 1)):
             continue
-        if (partkey_lookup[lineitem_i["l_partkey"]] is not None):
-            partkey_lookup[lineitem_i["l_partkey"]] +=\
-                lineitem_i["l_extendedprice"]
+        if (lineitem["l_partkey"][i] is not None and
+            lineitem["l_extendedprice"][i] is not None and
+            partkey_lookup[lineitem["l_partkey"][i]] is not None):
+            partkey_lookup[lineitem["l_partkey"][i]] +=\
+                lineitem["l_extendedprice"][i]
     volume = np.float64()
     for val in partkey_lookup.values():
         volume += val
     print(volume)
-    return pd.DataFrame.from_dict({"volume": [volume.astype(np.int64)]})
+    return pd.DataFrame.from_dict({"volume": [volume.astype(np.int64)]}), partkey_lookup
     return pd.DataFrame({'volume': [2906154294]})
 
 
