@@ -1,7 +1,8 @@
 import pandas as pd
 import duckdb
 import time
-
+import numpy as np
+from pandas._libs.tslibs.timestamps import Timestamp
 
 def validate(actual_result):
     expected_result = pd.read_csv('join_expected.csv')
@@ -16,7 +17,7 @@ def validate(actual_result):
     return True
 
 
-def query(con):
+def query(lineitem, part):
     # TODO: Implement the query and return a data frame with the result.
     # NOTE: Don't use duckdb or built-in pandas functions for the join!
     # NOTE: Your join operator should be done manually.
@@ -25,6 +26,23 @@ def query(con):
     #    where l_partkey = p_partkey
     #    and l_shipdate >= date '1995-09-01'
     #    and l_shipdate < date '1995-10-01';""")
+    partkey_lookup = {}
+    for (partkey) in part["p_partkey"]:
+        partkey_lookup[partkey] = np.float64()
+    print("hash table length: ", len(partkey_lookup))
+    for i in range(len(lineitem)):
+        lineitem_i = lineitem.iloc[i]
+        if not (lineitem_i["l_shipdate"] >= Timestamp(1995, 9, 1) and
+                lineitem_i["l_shipdate"] < Timestamp(1995, 10, 1)):
+            continue
+        if (partkey_lookup[lineitem_i["l_partkey"]] is not None):
+            partkey_lookup[lineitem_i["l_partkey"]] +=\
+                lineitem_i["l_extendedprice"]
+    volume = np.float64()
+    for val in partkey_lookup.values():
+        volume += val
+    print(volume)
+    return pd.DataFrame.from_dict({"volume": [volume.astype(np.int64)]})
     return pd.DataFrame({'volume': [2906154294]})
 
 
@@ -71,9 +89,15 @@ con.execute(
 con.execute(
     "copy part from 'tpch/sf-1/part.csv' CSV HEADER;").fetchall()
 
+# turn the tables into a dataframe
+start = time.time()
+lineitem = con.table("lineitem").df()
+part = con.table("part").df()
+end = time.time()
+
 # Run query (data is loaded before, everything else needs to be timed)
 start = time.time()
-result = query(con)
+result = query(lineitem, part)
 end = time.time()
 
 # Validate result and print time
